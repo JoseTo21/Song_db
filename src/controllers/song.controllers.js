@@ -1,33 +1,34 @@
 const catchError = require("../utils/catchError");
+const Song = require("../models/Song");
 const Artist = require("../models/Artist");
 const Genre = require("../models/Genre");
 
 const getAll = catchError(async (req, res) => {
-  const results = await Artist.findAll({ include: [Genre] });
+  const results = await Song.findAll({ include: [Artist, Genre] });
   return res.json(results);
 });
 
 const create = catchError(async (req, res) => {
-  const result = await Artist.create(req.body);
+  const result = await Song.create(req.body);
   return res.status(201).json(result);
 });
 
 const getOne = catchError(async (req, res) => {
   const { id } = req.params;
-  const result = await Artist.findByPk(id);
+  const result = await Song.findByPk(id);
   if (!result) return res.sendStatus(404);
   return res.json(result);
 });
 
 const remove = catchError(async (req, res) => {
   const { id } = req.params;
-  await Artist.destroy({ where: { id } });
+  await Song.destroy({ where: { id } });
   return res.sendStatus(204);
 });
 
 const update = catchError(async (req, res) => {
   const { id } = req.params;
-  const result = await Artist.update(req.body, {
+  const result = await Song.update(req.body, {
     where: { id },
     returning: true,
   });
@@ -35,13 +36,24 @@ const update = catchError(async (req, res) => {
   return res.json(result[1][0]);
 });
 
-const setGenres = catchError(async (req, res) => {
+const setArtist = catchError(async (req, res) => {
   const { id } = req.params;
-  const artist = await Artist.findByPk(id);
+  const song = await Song.findByPk(id);
 
-  await artist.setGenres(req.body);
+  await song.setArtists(req.body);
 
-  const genre = await artist.getGenres();
+  const artist = await song.getArtists();
+
+  return res.json(artist);
+});
+
+const setGenre = catchError(async (req, res) => {
+  const { id } = req.params;
+  const song = await Song.findByPk(id);
+
+  await song.setGenres(req.body);
+
+  const genre = await song.getGenres();
 
   return res.json(genre);
 });
@@ -52,5 +64,6 @@ module.exports = {
   getOne,
   remove,
   update,
-  setGenres,
+  setArtist,
+  setGenre,
 };
